@@ -4,17 +4,17 @@ import time
 
 def main(): 
     # Create Sensors
-    sensor_1 = Sensor(rate=1, identificador=1)
-    sensor_2 = Sensor(rate=1, identificador=2)
+    sensor_1 = Sensor(rate=1, identificador=1, room_type=1)
+    #sensor_2 = Sensor(rate=1, identificador=2, room_type=0)
 
-    sensor_2.set_data({"temp": 55, "humedad": "10%"})
+    #sensor_2.set_data({"room_temp": 10, "humidity": 0.1, "leaf_temp": 12})
 
     # Hilos (daemon = True hace que los procesos hijos mueran)
     hilo_1 = threading.Thread(target=sensor_1.init, daemon=True)
-    hilo_2 = threading.Thread(target=sensor_2.init, daemon=True)
+    #hilo_2 = threading.Thread(target=sensor_2.init, daemon=True)
     
     hilo_1.start()
-    hilo_2.start()
+    #hilo_2.start()
 
     # Mantenemos el Hilo padre en espera hasta finalizar presionando cualquier tecla
     try:

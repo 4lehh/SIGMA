@@ -15,31 +15,80 @@ class Server:
         self.__state = True
 
     def init(self): 
-
-        # Escucha
         self.__server.bind((self.__host, self.__port))
 
         while self.__state:
             data, addr = self.__server.recvfrom(4096)    
         
-            # La data llega como un string, entonces debemos pasarla a un dict
             data_decode = json.loads(data.decode("utf-8"))
-
-            print(f"Paquete de ({addr[1]}, Sensor {data_decode["identificador"]}): (Temperatura: {data_decode["temp"]}, Humedad: {data_decode["humedad"]})")
-
             
-            if int(data_decode["temp"]) >= 40:
+            print(f"Paquete de ({addr[1]}, Sensor {data_decode["identificador"]}): (Temperatura: {data_decode["room_temp"]:4f}, Humedad: {data_decode["humidity"]:4f}), VPD: {data_decode["VPD"]:4f}")
+            
+            # --------------- BLOQUE DE ACTUADOR --------------------
+            # VPD (Vapor pressure deficit): diferencia entre cuánta húmedad puede mantener el aire y cuánta mantiene actualmente.
+            # Los sensores se dividen en 3 tipos, sensores en habitaciones con plantas en germinación,
+            # en habitaciones con plantas en estado vegetativo y en habitaciones con plantas que han florecido.
+            # Para cada etapa de crecimiento de la planta hay límites de VPD recomendados.
+            
+            # --- Habitación en donde las plantas están en la etapa de germinación ---
+            if int(data_decode["room_type"]) == 0:
+                VPD_value = float(data_decode["VPD"])
+                actuators = {"cooling": 0.0, "heating": 0.0, "humidifier": 0.0, "light": 0.5}
 
-                # --------------- BLOQUE DE ACTUADOR --------------------
-                
-                self.send_response(message="¡¡Activa tu protocolo de seguridad!!", addr=addr)
-    
-    def send_response(self, message: str, addr: dict):
+                if VPD_value > 1.0:
+                    actuators["humidifier"] = 0.06
+
+                elif VPD_value <= 0.8:
+                    actuators["cooling"] = 0.03
+
+                else:
+                    actuators["humidifier"] = 0.02
+
+                self.send_response(addr, actuators, message="generate data")
+
+            #  --- Habitación en donde las plantas están en la etapa vegetativa de crecimiento ---
+            elif int(data_decode["room_type"]) == 1:
+                VPD_value = float(data_decode["VPD"])
+                actuators = {"cooling": 0.0, "heating": 0.0, "humidifier": 0.0, "light": 0.7}
+                extra_message = " "
+
+                if VPD_value > 1.2:
+                    actuators["cooling"] = 0.06
+                    extra_message += "VPD Alto"
+
+                elif VPD_value <= 1.0:
+                    actuators["heating"] = 0.04
+                    extra_message += "VPD Bajo"
+
+                self.send_response(addr, actuators, message="generate data"+extra_message)
+
+            #  --- Habitación en donde las plantas están en la etapa de floración ---
+            elif int(data_decode["room_type"]) == 2:
+                VPD_value = float(data_decode["VPD"])
+                actuators = {"cooling": 0.0, "heating": 0.0, "humidifier": 0.0, "light": 1.0}
+
+                if VPD_value > 1.2:
+                    actuators["light"] = 0.05
+
+                elif VPD_value <= 1.0:
+                    actuators["heating"] = 0.03
+
+                self.send_response(addr, actuators, message="generate data")
+  
+
+    def send_response(self, addr, actuators=None,message=None):
+
         reply_dict = {
-            "status": "alerta",
-            "msg": message
+            "status": "En alerta"
         }
 
+        if message is not None:
+            reply_dict["msg"] = message
+        else:
+            reply_dict["msg"] = ""
+
+        if actuators is not None:
+            reply_dict["actuators"] = actuators
+
         reply = json.dumps(reply_dict).encode("utf-8")
-        
         self.__server.sendto(reply, addr)
