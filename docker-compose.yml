@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  server:
+    build: ./server
+    container_name: sigma_server
+    volumes:
+      - ./server:/app
+    # IMPORTANTE: Mapea el puerto que use tu server.py (ejemplo: 5000)
+    ports:
+      - "9001:9001"
+    restart: always
+    environment:
+      - PYTHONUNBUFFERED=1
+
+  sensor:
+    build: ./sensor
+    container_name: sigma_sensor
+    volumes:
+      - ./sensor:/app
+    depends_on:
+      - server
+    stdin_open: true # <--- Agrega esto (permite mantener el canal abierto)
+    tty: true

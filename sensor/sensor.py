@@ -3,7 +3,7 @@ import json as js
 import random
 import math
 
-SERVER_HOST = "127.0.0.1"
+SERVER_HOST = "server"
 SERVER_PORT = 9001
 
 

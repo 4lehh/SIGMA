@@ -1,7 +1,7 @@
 import socket
 import json
 
-HOST = "127.0.0.1"
+HOST = "0.0.0.0"
 PORT = 9001
 
 class Server:
@@ -22,7 +22,7 @@ class Server:
         
             data_decode = json.loads(data.decode("utf-8"))
             
-            print(f"Paquete de ({addr[1]}, Sensor {data_decode["identificador"]}): (Temperatura: {data_decode["room_temp"]:4f}, Humedad: {data_decode["humidity"]:4f}), VPD: {data_decode["VPD"]:4f}")
+            print(f"Paquete de ({addr[1]}, Sensor {data_decode['identificador']}): (Temperatura: {data_decode['room_temp']:4f}, Humedad: {data_decode['humidity']:4f}), VPD: {data_decode['VPD']:4f}", flush=True)
             
             # --------------- BLOQUE DE ACTUADOR --------------------
             # VPD (Vapor pressure deficit): diferencia entre cuánta húmedad puede mantener el aire y cuánta mantiene actualmente.
@@ -82,11 +82,10 @@ class Server:
             "status": "En alerta"
         }
 
-        if message is not None:
-            reply_dict["msg"] = message
-        else:
-            reply_dict["msg"] = ""
+        text = "" if message is None else message
 
+        reply_dict["msg"] = text
+        
         if actuators is not None:
             reply_dict["actuators"] = actuators
 
