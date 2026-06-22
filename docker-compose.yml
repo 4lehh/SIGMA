@@ -6,7 +6,6 @@ services:
     container_name: sigma_server
     volumes:
       - ./server:/app
-    # IMPORTANTE: Mapea el puerto que use tu server.py (ejemplo: 5000)
     ports:
       - "9001:9001"
     restart: always
@@ -20,5 +19,24 @@ services:
       - ./sensor:/app
     depends_on:
       - server
-    stdin_open: true # <--- Agrega esto (permite mantener el canal abierto)
+      - dashboard
+    stdin_open: true
     tty: true
+    environment:
+      - PYTHONUNBUFFERED=1
+      # El sensor enviará también al dashboard (puerto 9002)
+      - DASHBOARD_HOST=dashboard
+      - DASHBOARD_PORT=9002
+
+  dashboard:
+    build: ./dashboard
+    container_name: sigma_dashboard
+    volumes:
+      - ./dashboard:/app
+    ports:
+      - "8080:8080"    # Dashboard web
+      - "8765:8765"    # WebSocket
+      - "9002:9002/udp"  # UDP sniffer
+    restart: always
+    environment:
+      - PYTHONUNBUFFERED=1

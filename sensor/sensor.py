@@ -2,10 +2,13 @@ import socket as s
 import json as js
 import random
 import math
+import os
 
 SERVER_HOST = "server"
 SERVER_PORT = 9001
 
+DASHBOARD_HOST = os.environ.get("DASHBOARD_HOST", "dashboard")
+DASHBOARD_PORT = int(os.environ.get("DASHBOARD_PORT", 9002))
 
 class Sensor:
 
@@ -58,6 +61,12 @@ class Sensor:
 
             message_encode = js.dumps(self.__data).encode('utf-8')
             self.__client.sendto(message_encode, (self.__server_host, self.__server_port))
+
+            # ── Dashboard ──────────────────
+            try:
+                self.__client.sendto(message_encode, (DASHBOARD_HOST, DASHBOARD_PORT))
+            except Exception:
+                pass
 
             try:
                 self.__client.settimeout(0.5)
