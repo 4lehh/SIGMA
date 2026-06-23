@@ -52,11 +52,13 @@ Para ver la dashboard con la información en tiempo real, solo debes ingresar a 
 
 ```sh
 ├── dashboard
-│   ├── app.js
+│   ├── css
+│   │   └── style.css
+│   ├── js
+│   │   └── app.css
 │   ├── dashboard.py
 │   ├── Dockerfile
-│   ├── index.html
-│   └── style.css
+│   └── index.html
 ├── sensor
 │   ├── Dockerfile
 │   ├── launch_sensor.py
