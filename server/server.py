@@ -1,8 +1,12 @@
 import socket
 import json
+import os
 
 HOST = "0.0.0.0"
 PORT = 9001
+
+DASHBOARD_HOST = os.environ.get("DASHBOARD_HOST", "dashboard")
+DASHBOARD_PORT = int(os.environ.get("DASHBOARD_PORT", 9002))
 
 class Server:
     
@@ -74,6 +78,12 @@ class Server:
                     actuators["heating"] = 0.03
 
                 self.send_response(addr, actuators, message="generate data")
+            
+            # ── Dashboard ──────────────────
+            try:
+                self.__server.sendto(data, (DASHBOARD_HOST, DASHBOARD_PORT))
+            except Exception:
+                pass
   
 
     def send_response(self, addr, actuators=None,message=None):

@@ -7,9 +7,6 @@ import os
 SERVER_HOST = "server"
 SERVER_PORT = 9001
 
-DASHBOARD_HOST = os.environ.get("DASHBOARD_HOST", "dashboard")
-DASHBOARD_PORT = int(os.environ.get("DASHBOARD_PORT", 9002))
-
 class Sensor:
 
     def __init__(self, identificador: int, rate: float = 0.1, room_type=1,
@@ -59,22 +56,12 @@ class Sensor:
 
             self.__data["VPD"] = self.calculate_leaf_VPD()
 
-            message_encode = js.dumps(self.__data).encode('utf-8')
+            aux_dictionary = self.__data.copy()
+            claves = ['cooling' , 'heating', 'humidifier', 'light']
+            aux_dictionary["actuators"] = {k: self.__system[k] for k in claves if k in self.__system}
+
+            message_encode = js.dumps(aux_dictionary).encode('utf-8')
             self.__client.sendto(message_encode, (self.__server_host, self.__server_port))
-
-            # ── Dashboard ──────────────────
-            try:
-                aux_dictionary = self.__data.copy()
-                claves = ['cooling' , 'heating', 'humidifier', 'light']
-                aux_dictionary["actuators"] = {k: self.__system[k] for k in claves if k in self.__system}
-
-                print(aux_dictionary)
-
-                message_encode_dashboard = js.dumps(aux_dictionary).encode('utf-8')
-
-                self.__client.sendto(message_encode_dashboard, (DASHBOARD_HOST, DASHBOARD_PORT))
-            except Exception:
-                pass
 
             try:
                 self.__client.settimeout(0.5)
