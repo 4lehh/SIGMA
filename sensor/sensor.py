@@ -64,7 +64,15 @@ class Sensor:
 
             # ── Dashboard ──────────────────
             try:
-                self.__client.sendto(message_encode, (DASHBOARD_HOST, DASHBOARD_PORT))
+                aux_dictionary = self.__data.copy()
+                claves = ['cooling' , 'heating', 'humidifier', 'light']
+                aux_dictionary["actuators"] = {k: self.__system[k] for k in claves if k in self.__system}
+
+                print(aux_dictionary)
+
+                message_encode_dashboard = js.dumps(aux_dictionary).encode('utf-8')
+
+                self.__client.sendto(message_encode_dashboard, (DASHBOARD_HOST, DASHBOARD_PORT))
             except Exception:
                 pass
 

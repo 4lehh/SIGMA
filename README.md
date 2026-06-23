@@ -40,8 +40,10 @@ Para montar el proyecto, hemos utilizado Docker Compose. Para la ejecución del 
 sudo docker compose up --build
 
 # Ver los logs del server o del sensor. (prints de python)
-sudo docker compose logs -f server/sensor 
+sudo docker compose logs -f server/sensor
 
 # Apagar el proyecto
 sudo docker compose down
 ```
+
+Para ver la dashboard con la información en tiempo real, solo debes ingresar a `localhost:8080` en tu navegador predeterminado.

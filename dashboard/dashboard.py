@@ -86,6 +86,7 @@ def udp_sniffer(loop: asyncio.AbstractEventLoop):
             "leaf_temp":     round(float(packet.get("leaf_temp", 0)), 3),
             "VPD":           round(float(packet.get("VPD", 0)), 4),
             "timestamp":     time.strftime("%H:%M:%S"),
+            "actuators":     packet.get("actuators", {"cooling": 0, "heating": 0, "humidifier": 0, "light": 0}),
         }
 
         with state_lock:
