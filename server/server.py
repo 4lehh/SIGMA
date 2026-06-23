@@ -17,11 +17,21 @@ class Server:
         self.__host = host
         self.__port = port
         self.__state = True
+        
+        # buffer temporal para almacenar datos antes de enviarlos a dashboard (para situaciones normales)
+        self.__data_buffer = []
+
+        # en caso de anomalía, servidor envía datos directamente al dashboard, sin pasar por buffer
+        self.__anomaly_detected = False
+        
 
     def init(self): 
         self.__server.bind((self.__host, self.__port))
 
         while self.__state:
+            #NOTE: recvfrom es bloqueante y pausa ejecución completa hasta que llegue paquete
+            # problema de esto es que si sensores mueren y se estaba armando un batch de datos, nunca se enviará al dashboard
+            # y se perdería información
             data, addr = self.__server.recvfrom(4096)    
         
             data_decode = json.loads(data.decode("utf-8"))
@@ -41,10 +51,13 @@ class Server:
 
                 if VPD_value > 1.0:
                     actuators["humidifier"] = 0.06
+                    self.__anomaly_detected = True
 
                 elif VPD_value <= 0.8:
                     actuators["cooling"] = 0.03
+                    self.__anomaly_detected = True
 
+                # NOTE: esto no es una anomalía? por ahora asumiré que no porque siempre se ejecuta
                 else:
                     actuators["humidifier"] = 0.02
 
@@ -59,10 +72,12 @@ class Server:
                 if VPD_value > 1.2:
                     actuators["cooling"] = 0.06
                     extra_message += "VPD Alto"
+                    self.__anomaly_detected = True
 
                 elif VPD_value <= 1.0:
                     actuators["heating"] = 0.04
                     extra_message += "VPD Bajo"
+                    self.__anomaly_detected = True
 
                 self.send_response(addr, actuators, message="generate data"+extra_message)
 
@@ -73,18 +88,42 @@ class Server:
 
                 if VPD_value > 1.2:
                     actuators["light"] = 0.05
+                    self.__anomaly_detected = True
 
                 elif VPD_value <= 1.0:
                     actuators["heating"] = 0.03
+                    self.__anomaly_detected = True
 
                 self.send_response(addr, actuators, message="generate data")
             
             # ── Dashboard ──────────────────
-            try:
-                self.__server.sendto(data, (DASHBOARD_HOST, DASHBOARD_PORT))
-            except Exception:
-                pass
-  
+            
+            # si anomalía, reenviar directo a dashboard
+            if self.__anomaly_detected:
+                package_anomaly = {"type": "anomaly", "data": data_decode}
+                package_anomaly_encoded = json.dumps(package_anomaly).encode("utf-8")
+                try:
+                    self.__server.sendto(package_anomaly_encoded, (DASHBOARD_HOST, DASHBOARD_PORT))
+                except Exception:
+                    pass
+                self.__anomaly_detected = False
+            else:
+                # si no anomalía, almacenar en buffer y enviar cada cierto tiempo
+                self.__data_buffer.append(data)
+                if len(self.__data_buffer) >= 10: # por ahora se envía cada 10 paquetes, revisar (tiempo final depende de rate de los sensores)
+                    data_batch = [json.loads(data.decode("utf-8")) for data in self.__data_buffer] 
+                    
+                    # se construye un solo paquete que lleva la data en lote
+                    package_batch = {"type": "batch", "data": data_batch}
+                    package_batch_encoded = json.dumps(package_batch).encode("utf-8")                   
+                    
+                    try:
+                        self.__server.sendto(package_batch_encoded, (DASHBOARD_HOST, DASHBOARD_PORT))
+                    except Exception:
+                        pass
+
+                    self.__data_buffer.clear() # se limpia buffer
+
 
     def send_response(self, addr, actuators=None,message=None):
 

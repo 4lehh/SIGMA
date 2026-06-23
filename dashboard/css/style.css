@@ -327,3 +327,20 @@ main {
 
 .log-entry .ts { color: var(--green-dim); min-width: 56px; }
 .log-entry .msg { color: var(--text); }
+
+
+/* ── NUEVO: Animaciones y Estilos de Anomalía (Vía Rápida) ── */
+@keyframes pulse-red-alert {
+  0% { box-shadow: 0 0 0 0 rgba(255, 79, 79, 0.6); border-color: var(--red); }
+  70% { box-shadow: 0 0 0 10px rgba(255, 79, 79, 0); border-color: var(--red); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 79, 79, 0); border-color: transparent; }
+}
+
+.sensor-card.anomaly-alert {
+  animation: pulse-red-alert 1.5s infinite;
+  border: 1px solid var(--red);
+}
+
+.sensor-card.anomaly-alert .card-title {
+  color: var(--red);
+}

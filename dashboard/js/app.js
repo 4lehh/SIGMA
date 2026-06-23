@@ -76,8 +76,12 @@ function renderCard(s) {
   }).join('');
 
   const sid = safeId(id);
+  
+  // NUEVO: Verificamos si hay anomalía para agregar la clase css inicial
+  const anomalyClass = s.is_anomaly ? 'anomaly-alert' : '';
+
   return `
-  <div class="sensor-card" id="card-${sid}">
+  <div class="sensor-card ${anomalyClass}" id="card-${sid}">
     <div class="card-header">
       <div class="card-title">${id}</div>
       <div class="room-badge room-${s.room_type}">${s.room_label}</div>
@@ -199,8 +203,15 @@ function updateCard(s) {
 
   const card = document.getElementById(`card-${sid}`);
   if (card) {
-    card.classList.add('updated');
-    setTimeout(() => card.classList.remove('updated'), 800);
+    // NUEVO: Verificamos si debemos activar o desactivar la alerta
+    if (s.is_anomaly) {
+      card.classList.add('anomaly-alert');
+      card.classList.remove('updated');
+    } else {
+      card.classList.remove('anomaly-alert');
+      card.classList.add('updated');
+      setTimeout(() => card.classList.remove('updated'), 800);
+    }
   }
 }
 
@@ -308,15 +319,21 @@ function processSensor(s) {
   // Actualizar el gráfico principal
   updateChartData(s);
 
-  // Log
-  addLog(`${s.identificador} — T:${s.room_temp.toFixed(2)}°C  H:${(s.humidity*100).toFixed(1)}%  VPD:${s.VPD.toFixed(4)}`);
+  // NUEVO: Lógica de Log separada para darle énfasis a las anomalías
+  if (s.is_anomaly) {
+    addLog(`ANOMALÍA: ${s.identificador} reporta parámetros críticos!!! VPD=${s.VPD.toFixed(4)}`, true);
+  } else {
+    addLog(`${s.identificador} — T:${s.room_temp.toFixed(2)}°C  H:${(s.humidity*100).toFixed(1)}%  VPD:${s.VPD.toFixed(4)}`, false);
+  }
 }
 
-function addLog(msg) {
+function addLog(msg, isAlert = false) {
   const el = $('log-entries');
   const now = new Date().toTimeString().slice(0, 8);
+  const alertStyle = isAlert ? 'style="color: var(--red); font-weight: 600;"' : '';
+  
   el.insertAdjacentHTML('afterbegin',
-    `<div class="log-entry"><span class="ts">${now}</span><span class="msg">${msg}</span></div>`);
+    `<div class="log-entry"><span class="ts">${now}</span><span class="msg" ${alertStyle}>${msg}</span></div>`);
   while (el.children.length > MAX_LOGS) el.removeChild(el.lastChild);
 }
 
@@ -347,4 +364,5 @@ function connect() {
   ws.onerror = () => ws.close();
 }
 
+// Iniciar conexión
 connect();
