@@ -47,3 +47,29 @@ sudo docker compose down
 ```
 
 Para ver la dashboard con la información en tiempo real, solo debes ingresar a `localhost:8080` en tu navegador predeterminado.
+
+### Estructura del proyecto
+
+```sh
+├── dashboard
+│   ├── css
+│   │   └── style.css
+│   ├── js
+│   │   └── app.css
+│   ├── dashboard.py
+│   ├── Dockerfile
+│   └── index.html
+├── sensor
+│   ├── Dockerfile
+│   ├── launch_sensor.py
+│   └── sensor.py
+├── server
+│   ├── Dockerfile
+│   ├── launch_server.py
+│   └── server.py
+├── docker-compose.yml
+├── documentation.md
+├── LICENSE
+└── README.md
+```
+
