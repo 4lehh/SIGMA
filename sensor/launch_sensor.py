@@ -4,10 +4,10 @@ import time
 
 def main(): 
     # Create Sensors
-    sensor_1 = Sensor(rate=1, identificador=1, room_type=1)
-    sensor_2 = Sensor(rate=1, identificador=2, room_type=0)
-    sensor_3 = Sensor(rate=1, identificador=3, room_type=1)
-    sensor_4 = Sensor(rate=1, identificador=4, room_type=2)
+    sensor_1 = Sensor(rate=0.05, identificador=1, room_type=1)
+    sensor_2 = Sensor(rate=0.05, identificador=2, room_type=0)
+    sensor_3 = Sensor(rate=0.05, identificador=3, room_type=1)
+    sensor_4 = Sensor(rate=0.05, identificador=4, room_type=2)
 
     # Hilos (daemon = True hace que los procesos hijos mueran)
     hilo_1 = threading.Thread(target=sensor_1.init, daemon=True)

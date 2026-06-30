@@ -16,7 +16,6 @@ class Server:
 
     def init(self): 
         self.__server.bind((self.__host, self.__port))
-
         while self.__state:
             data, addr = self.__server.recvfrom(4096)    
         
@@ -30,34 +29,34 @@ class Server:
             # en habitaciones con plantas en estado vegetativo y en habitaciones con plantas que han florecido.
             # Para cada etapa de crecimiento de la planta hay límites de VPD recomendados.
             
+            actuators = {"cooling": 0.0, "heating": 0.0, "humidifier": 0.0, "light": 0.0}
             # --- Habitación en donde las plantas están en la etapa de germinación ---
             if int(data_decode["room_type"]) == 0:
                 VPD_value = float(data_decode["VPD"])
-                actuators = {"cooling": 0.0, "heating": 0.0, "humidifier": 0.0, "light": 0.5}
+                extra_message = " "
 
                 if VPD_value > 1.0:
-                    actuators["humidifier"] = 0.06
+                    actuators["humidifier"] = 0.015
+                    extra_message += "VPD Alto"
 
                 elif VPD_value <= 0.8:
-                    actuators["cooling"] = 0.03
+                    actuators["heating"] = 0.05
+                    extra_message += "VPD Bajo"
 
-                else:
-                    actuators["humidifier"] = 0.02
 
-                self.send_response(addr, actuators, message="generate data")
+                self.send_response(addr, actuators, message="generate data"+extra_message)
 
             #  --- Habitación en donde las plantas están en la etapa vegetativa de crecimiento ---
             elif int(data_decode["room_type"]) == 1:
                 VPD_value = float(data_decode["VPD"])
-                actuators = {"cooling": 0.0, "heating": 0.0, "humidifier": 0.0, "light": 0.7}
                 extra_message = " "
 
                 if VPD_value > 1.2:
-                    actuators["cooling"] = 0.06
+                    actuators["cooling"] = 0.15
                     extra_message += "VPD Alto"
 
                 elif VPD_value <= 1.0:
-                    actuators["heating"] = 0.04
+                    actuators["heating"] = 0.15
                     extra_message += "VPD Bajo"
 
                 self.send_response(addr, actuators, message="generate data"+extra_message)
@@ -65,16 +64,21 @@ class Server:
             #  --- Habitación en donde las plantas están en la etapa de floración ---
             elif int(data_decode["room_type"]) == 2:
                 VPD_value = float(data_decode["VPD"])
-                actuators = {"cooling": 0.0, "heating": 0.0, "humidifier": 0.0, "light": 1.0}
+                extra_message = " "
 
-                if VPD_value > 1.2:
+                if VPD_value > 1.4:
+                    actuators["cooling"] = 0.12
                     actuators["light"] = 0.05
+                    extra_message += "VPD Alto"
 
-                elif VPD_value <= 1.0:
-                    actuators["heating"] = 0.03
+                elif VPD_value <= 1.2:
+                    actuators["heating"] = 0.15
+                    extra_message += "VPD Bajo"
 
-                self.send_response(addr, actuators, message="generate data")
+                self.send_response(addr, actuators, message="generate data"+extra_message)
   
+
+
 
     def send_response(self, addr, actuators=None,message=None):
 
