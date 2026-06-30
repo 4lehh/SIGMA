@@ -32,7 +32,8 @@ class Sensor:
             "room_temp": 25.0,
             "humidity": 0.6,
             "leaf_temp": 24.5,
-            "room_type": self.__room_type
+            "room_type": self.__room_type,
+            "rate": self.rate,
         }
 
         if self.__room_type == 0:
@@ -100,6 +101,14 @@ class Sensor:
                 # Al obtener mensaje "generate data" se llama al método aquí
                 if "generate data" in respuesta["msg"]:
                     self.generate_data(0.00875)
+                
+                # Al obtener mensaje "rate" se actualiza rate de envío de datos
+                try:
+                    if "rate" in respuesta:
+                        self.rate = float(respuesta["rate"])
+                        self.__data["rate"] = self.rate
+                except (KeyError, ValueError):
+                    pass
 
             except s.timeout:
                 pass
