@@ -24,8 +24,8 @@ function vpdColor(vpd) {
 }
 
 function vpdStatus(vpd, roomType) {
-  const ranges = { 0: [0.8, 1.0], 1: [1.0, 1.2], 2: [1.0, 1.2] };
-  const [lo, hi] = ranges[roomType] ?? [0.8, 1.2];
+  const ranges = { 0: [0.8, 1.0], 1: [1.0, 1.2], 2: [1.2, 1.4] };
+  const [lo, hi] = ranges[roomType] ?? [0.8, 1.4];
   if (vpd < lo)  return { text: '▼ VPD bajo',   color: '#5b9fff' };
   if (vpd > hi)  return { text: '▲ VPD alto',   color: '#ff4f4f' };
   return { text: '● Rango óptimo', color: '#2aff7a' };
