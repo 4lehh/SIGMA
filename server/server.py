@@ -29,7 +29,7 @@ class Server:
         self.__server.bind((self.__host, self.__port))
 
         while self.__state:
-            #NOTE: recvfrom es bloqueante y pausa ejecución completa hasta que llegue paquete
+            # NOTE: recvfrom es bloqueante y pausa ejecución completa hasta que llegue paquete
             # problema de esto es que si sensores mueren y se estaba armando un batch de datos, nunca se enviará al dashboard
             # y se perdería información
             data, addr = self.__server.recvfrom(4096)    
@@ -43,7 +43,8 @@ class Server:
             # Los sensores se dividen en 3 tipos, sensores en habitaciones con plantas en germinación,
             # en habitaciones con plantas en estado vegetativo y en habitaciones con plantas que han florecido.
             # Para cada etapa de crecimiento de la planta hay límites de VPD recomendados.
-            
+            # 0 => germinacion, 1 => vegetativo, 2 => floracion
+
             # --- Habitación en donde las plantas están en la etapa de germinación ---
             if int(data_decode["room_type"]) == 0:
                 VPD_value = float(data_decode["VPD"])

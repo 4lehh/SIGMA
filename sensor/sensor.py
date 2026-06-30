@@ -2,7 +2,10 @@ import socket as s
 import json as js
 import random
 import math
+import time
 import os
+
+
 
 SERVER_HOST = "server"
 SERVER_PORT = 9001
@@ -50,7 +53,6 @@ class Sensor:
 
 
     def init(self):
-        import time
 
         while self.__state:
 
@@ -64,8 +66,6 @@ class Sensor:
             self.__client.sendto(message_encode, (self.__server_host, self.__server_port))
 
             try:
-                self.__client.settimeout(0.5)
-
                 data, _ = self.__client.recvfrom(4096)
                 respuesta = js.loads(data.decode('utf-8'))
 
@@ -127,6 +127,7 @@ class Sensor:
         else:
             target_temp = 27
             target_humidity = 0.55
+
         self.__data["room_temp"] += random.uniform(-change_value, change_value)
         self.__data["room_temp"] += -0.02 * (self.__data["room_temp"] - target_temp)
 

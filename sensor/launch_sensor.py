@@ -4,9 +4,9 @@ import time
 
 def main(): 
     # Create Sensors
-    sensor_1 = Sensor(rate=1, identificador=1, room_type=1)
-    sensor_2 = Sensor(rate=1, identificador=2, room_type=0)
-    sensor_3 = Sensor(rate=1, identificador=3, room_type=1)
+    sensor_1 = Sensor(rate=2, identificador=1, room_type=1)
+    sensor_2 = Sensor(rate=1.5, identificador=2, room_type=0)
+    sensor_3 = Sensor(rate=0.1, identificador=3, room_type=1)
     sensor_4 = Sensor(rate=1, identificador=4, room_type=2)
 
     # Hilos (daemon = True hace que los procesos hijos mueran)
