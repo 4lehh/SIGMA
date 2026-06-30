@@ -35,6 +35,21 @@ class Sensor:
             "room_type": self.__room_type
         }
 
+        if self.__room_type == 0:
+            self.__data["room_temp"] = 25
+            self.__data["leaf_temp"] = 24.5
+            self.__data["humidity"] = 0.69
+        elif self.__room_type == 1:
+            self.__data["room_temp"] = 25
+            self.__data["leaf_temp"] = 24.5
+            self.__data["humidity"] = 0.62
+
+        elif self.__room_type == 2:
+            self.__data["room_temp"] = 27
+            self.__data["leaf_temp"] = 26.5
+            self.__data["humidity"] = 0.6
+
+
         # Actuadores
         # Estos valores ayudan a aumentar o disminuir la magnitud de los datos de monitoreo. 
         self.__system = {
@@ -84,7 +99,7 @@ class Sensor:
 
                 # Al obtener mensaje "generate data" se llama al método aquí
                 if "generate data" in respuesta["msg"]:
-                    self.generate_data(0.005)
+                    self.generate_data(0.00875)
 
             except s.timeout:
                 pass
@@ -93,40 +108,19 @@ class Sensor:
 
     # Método para generar datos aleatorios
     def generate_data(self, change_value):
-        factor = 0.05
-
-        self.__system["cooling"] += factor * (
-            self.__system["cooling_target"] -
-            self.__system["cooling"]
-        )
-
-        self.__system["heating"] += factor * (
-            self.__system["heating_target"] -
-            self.__system["heating"]
-        )
-
-        self.__system["humidifier"] += factor * (
-            self.__system["humidifier_target"] -
-            self.__system["humidifier"]
-        )
-
-        self.__system["light"] += factor * (
-            self.__system["light_target"] -
-            self.__system["light"]
-        )
 
         # --- Temperatura ---
         if self.__room_type == 0:
-            target_temp = 22
-            target_humidity = 0.80
+            target_temp = 24
+            target_humidity = 0.72
 
         elif self.__room_type == 1:
-            target_temp = 25
+            target_temp = 24.5
             target_humidity = 0.65
 
         else:
-            target_temp = 27
-            target_humidity = 0.55
+            target_temp = 27.0
+            target_humidity = 0.58
 
         self.__data["room_temp"] += random.uniform(-change_value, change_value)
         self.__data["room_temp"] += -0.02 * (self.__data["room_temp"] - target_temp)
@@ -136,7 +130,7 @@ class Sensor:
 
         # --- Humedad ---
         self.__data["humidity"] += random.uniform(-change_value, change_value)
-        self.__data["humidity"] += -0.005 * (self.__data["humidity"] - target_humidity)
+        self.__data["humidity"] += -0.09 * (self.__data["humidity"] - target_humidity)
         self.__data["humidity"] += self.__system["humidifier"]
 
         self.__data["humidity"] = max(0.2, min(1.0, self.__data["humidity"]))
@@ -145,7 +139,6 @@ class Sensor:
         self.__data["leaf_temp"] += 0.1 * (self.__data["room_temp"] - self.__data["leaf_temp"])
         self.__data["leaf_temp"] += random.uniform(-change_value/2, change_value/2)
         self.__data["leaf_temp"] += self.__system["light"]
-
 
     def calculate_leaf_VPD(self):
 
