@@ -1,14 +1,16 @@
 import socket as s
 import json as js
-import random
+import random as rd
 import math
 import time
-import os
+from nacl.secret import SecretBox
+from nacl.utils import random
 
 
 
 SERVER_HOST = "server"
 SERVER_PORT = 9001
+SHARED_KEY = b"12345678901234567890123456789012"
 
 class Sensor:
 
@@ -69,7 +71,7 @@ class Sensor:
 
 
     def init(self):
-
+        box = SecretBox(SHARED_KEY)
         while self.__state:
 
             self.__data["VPD"] = self.calculate_leaf_VPD()
@@ -79,10 +81,15 @@ class Sensor:
             aux_dictionary["actuators"] = {k: self.__system[k] for k in claves if k in self.__system}
 
             message_encode = js.dumps(aux_dictionary).encode('utf-8')
-            self.__client.sendto(message_encode, (self.__server_host, self.__server_port))
+            message_encripted = box.encrypt(message_encode)
+
+            self.__client.sendto(message_encripted, (self.__server_host, self.__server_port))
 
             try:
                 data, _ = self.__client.recvfrom(4096)
+
+                data = box.decrypt(data)
+
                 respuesta = js.loads(data.decode('utf-8'))
 
                 if len(respuesta["msg"]) != 14:
@@ -131,14 +138,14 @@ class Sensor:
             target_temp = 27.0
             target_humidity = 0.58
 
-        self.__data["room_temp"] += random.uniform(-change_value, change_value)
+        self.__data["room_temp"] += rd.uniform(-change_value, change_value)
         self.__data["room_temp"] += -0.02 * (self.__data["room_temp"] - target_temp)
 
         self.__data["room_temp"] -= self.__system["cooling"]
         self.__data["room_temp"] += self.__system["heating"]
 
         # --- Humedad ---
-        self.__data["humidity"] += random.uniform(-change_value, change_value)
+        self.__data["humidity"] += rd.uniform(-change_value, change_value)
         self.__data["humidity"] += -0.09 * (self.__data["humidity"] - target_humidity)
         self.__data["humidity"] += self.__system["humidifier"]
 
@@ -146,7 +153,7 @@ class Sensor:
 
         # --- Hoja ---
         self.__data["leaf_temp"] += 0.1 * (self.__data["room_temp"] - self.__data["leaf_temp"])
-        self.__data["leaf_temp"] += random.uniform(-change_value/2, change_value/2)
+        self.__data["leaf_temp"] += rd.uniform(-change_value/2, change_value/2)
         self.__data["leaf_temp"] += self.__system["light"]
 
     def calculate_leaf_VPD(self):

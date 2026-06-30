@@ -1,9 +1,13 @@
 import socket
 import json
 import os
+from nacl.secret import SecretBox
+from nacl.exceptions import CryptoError
 
 HOST = "0.0.0.0"
 PORT = 9001
+
+SHARED_KEY = b"12345678901234567890123456789012"
 
 DASHBOARD_HOST = os.environ.get("DASHBOARD_HOST", "dashboard")
 DASHBOARD_PORT = int(os.environ.get("DASHBOARD_PORT", 9002))
@@ -27,15 +31,20 @@ class Server:
         # TODO: revisar valores
         # -- rate adapatativo --
         self.__max_rate = 5 # rate máximo de sensores (cuando no hay mayor variación)
-        self.__min_rate = 0.1 # rate mínimo de sensores (cuando hay mayor variación)
+        self.__min_rate = 0.3 # rate mínimo de sensores (cuando hay mayor variación)
         self.__last_VPDs_per_sensor = {} # dict que mapea identificador -> último VPD recibido
         self.__delta_VPD_threshold = 0.03 # TODO: jugar con este valor
 
     def init(self): 
+        box = SecretBox(SHARED_KEY)
+
         self.__server.bind((self.__host, self.__port))
+
 
         while self.__state:
             data, addr = self.__server.recvfrom(4096)    
+
+            data = box.decrypt(data)
         
             data_decode = json.loads(data.decode("utf-8"))
             
@@ -125,8 +134,10 @@ class Server:
             if self.__anomaly_detected:
                 package_anomaly = {"type": "anomaly", "data": data_decode}
                 package_anomaly_encoded = json.dumps(package_anomaly).encode("utf-8")
+                package_anomaly_encrypted = box.encrypt(package_anomaly_encoded)
+
                 try:
-                    self.__server.sendto(package_anomaly_encoded, (DASHBOARD_HOST, DASHBOARD_PORT))
+                    self.__server.sendto(package_anomaly_encrypted, (DASHBOARD_HOST, DASHBOARD_PORT))
                 except Exception:
                     pass
                 self.__anomaly_detected = False
@@ -149,6 +160,7 @@ class Server:
 
 
     def send_response(self, addr, actuators=None,message=None, rate=None):
+        box = SecretBox(SHARED_KEY)
 
         reply_dict = {
             "status": "En alerta" if self.__anomaly_detected else "Normal"
@@ -165,4 +177,7 @@ class Server:
             reply_dict["rate"] = rate
 
         reply = json.dumps(reply_dict).encode("utf-8")
+
+        reply = box.encrypt(reply)
+        
         self.__server.sendto(reply, addr)

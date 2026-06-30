@@ -13,11 +13,14 @@ import time
 from http.server import HTTPServer, SimpleHTTPRequestHandler
 from pathlib import Path
 import websockets
+from nacl.secret import SecretBox
+from nacl.exceptions import CryptoError
 
 UDP_HOST    = "0.0.0.0"
 UDP_PORT    = 9002          # Puerto donde recibe datos del Servidor Central
 WS_PORT     = 8765
 HTTP_PORT   = 8080
+SHARED_KEY = b"12345678901234567890123456789012"
 
 ROOM_LABELS = {0: "Germinación", 1: "Vegetativo", 2: "Floración"}
 
@@ -81,6 +84,7 @@ def udp_receiver(loop: asyncio.AbstractEventLoop):
     Corre en hilo separado.
     Recibe los datos del Servidor Central (Batches y Anomalías).
     """
+    box = SecretBox(SHARED_KEY)
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((UDP_HOST, UDP_PORT))
     sock.settimeout(1.0)
@@ -94,8 +98,15 @@ def udp_receiver(loop: asyncio.AbstractEventLoop):
             continue
 
         try:
-            payload = json.loads(data.decode("utf-8"))
-        except (json.JSONDecodeError, UnicodeDecodeError):
+            # Intentar desencriptar el paquete UDP bruto
+            data_desencriptada = box.decrypt(data)
+            payload = json.loads(data_desencriptada.decode("utf-8"))
+            
+        except CryptoError:
+            print(f"[UDP Receiver] ❌ Error de Criptografía: El paquete de {addr} no se pudo desencriptar. ¿Clave incorrecta o datos sin cifrar?")
+            continue
+        except (json.JSONDecodeError, UnicodeDecodeError) as e:
+            print(f"[UDP Receiver] ❌ Error de formato: JSON o String inválido tras desencriptar: {e}")
             continue
 
         # Lógica de desempaquetado según lo que envía server.py
