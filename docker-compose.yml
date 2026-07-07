@@ -11,6 +11,8 @@ services:
     restart: always
     environment:
       - PYTHONUNBUFFERED=1
+    cap_add:
+      - NET_ADMIN # permiso necesario para red
 
   sensor:
     build: ./sensor
@@ -24,9 +26,8 @@ services:
     tty: true
     environment:
       - PYTHONUNBUFFERED=1
-      # El sensor enviará también al dashboard (puerto 9002)
-      - DASHBOARD_HOST=dashboard
-      - DASHBOARD_PORT=9002
+    cap_add:
+      - NET_ADMIN # permiso necesario para red
 
   dashboard:
     build: ./dashboard
@@ -36,7 +37,9 @@ services:
     ports:
       - "8080:8080"    # Dashboard web
       - "8765:8765"    # WebSocket
-      - "9002:9002/udp"  # UDP sniffer
+      - "9002:9002/udp"  # UDP
     restart: always
     environment:
       - PYTHONUNBUFFERED=1
+    cap_add:
+      - NET_ADMIN # permiso necesario para red

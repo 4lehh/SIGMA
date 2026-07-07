@@ -18,6 +18,7 @@ class Sensor:
                  server_host=SERVER_HOST, server_port=SERVER_PORT):
 
         self.__client = s.socket(s.AF_INET, s.SOCK_DGRAM)
+        self.__client.settimeout(1.0) # tiempo de espera máximo para recibir respuesta del servidor
         self.__identificador = identificador
         self.rate = rate
         self.__state = True

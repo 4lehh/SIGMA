@@ -31,7 +31,7 @@ class Server:
         # TODO: revisar valores
         # -- rate adapatativo --
         self.__max_rate = 5 # rate máximo de sensores (cuando no hay mayor variación)
-        self.__min_rate = 0.3 # rate mínimo de sensores (cuando hay mayor variación)
+        self.__min_rate = 0.5 # rate mínimo de sensores (cuando hay mayor variación)
         self.__last_VPDs_per_sensor = {} # dict que mapea identificador -> último VPD recibido
         self.__delta_VPD_threshold = 0.03 # TODO: jugar con este valor
 
@@ -66,8 +66,6 @@ class Server:
                 new_rate = self.__min_rate
             else:
                 new_rate = self.__max_rate
-
-
 
             # --------------- BLOQUE DE ACTUADOR --------------------
             # VPD (Vapor pressure deficit): diferencia entre cuánta húmedad puede mantener el aire y cuánta mantiene actualmente.
@@ -150,9 +148,10 @@ class Server:
                     # se construye un solo paquete que lleva la data en lote
                     package_batch = {"type": "batch", "data": data_batch}
                     package_batch_encoded = json.dumps(package_batch).encode("utf-8")                   
-                    
+                    package_batch_encrypted = box.encrypt(package_batch_encoded)
+
                     try:
-                        self.__server.sendto(package_batch_encoded, (DASHBOARD_HOST, DASHBOARD_PORT))
+                        self.__server.sendto(package_batch_encrypted, (DASHBOARD_HOST, DASHBOARD_PORT))
                     except Exception:
                         pass
 
