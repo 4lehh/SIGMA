@@ -5,7 +5,7 @@
 |Nombres|Github|Correos|
 |-|-|-|
 |Oliver Peñailillo|[@pyrrss](https://www.github.com/pyrrss)|openailillo2023@udec.cl|
-|Manuel Isaac|[@sshiro0](https://www.github.com/sshiro0)|francnunez2023@udec.cl|
+|Francisca Núñez|[@sshiro0](https://www.github.com/sshiro0)|francnunez2023@udec.cl|
 |Javier Campos|[@4lehh](https://www.github.com/4lehh)|jacampos2023@udec.cl|
 |Juan Felipe Raysz|[@Sephir0ath](https://www.github.com/Sephir0ath)|jraysz2023@udec.cl|
 |Matías García|[@Matygp](https://www.github.com/Matygp)|matgarcia2023@udec.cl|
