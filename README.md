@@ -33,11 +33,21 @@ A través de una arquitectura centralizada cliente-servidor desarrollada complet
 >[!IMPORTANT]
 >Se requiere tener Docker 29.0.0 en adelante.  
 
-Para montar el proyecto, hemos utilizado Docker Compose. Para la ejecución del código, siga los siguientes pasos.
+Para montar el proyecto, hemos utilizado Docker Compose. Además, se usó la herramienta Traffic Control para definir parámetros de red en cada container.
+Para la ejecución del código, siga los siguientes pasos.
 
 ```sh
 # Levantar el proyecto
 sudo docker compose up --build
+
+# Parámetros de red de sensor
+docker exec -it sigma_sensor tc qdisc add dev eth0 root netem delay 50ms 15ms loss 3%
+
+# Parámetros de red de server
+docker exec -it sigma_server tc qdisc add dev eth0 root netem delay 45ms 10ms loss 2%
+
+# Ancho de banda del server
+docker exec -it sigma_server tc qdisc add dev eth0 root netem rate 1mbit
 
 # Ver los logs del server o del sensor. (prints de python)
 sudo docker compose logs -f server/sensor
