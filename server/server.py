@@ -1,6 +1,8 @@
 import socket
 import json
 import os
+import time
+
 from nacl.secret import SecretBox
 from nacl.exceptions import CryptoError
 import time
@@ -103,7 +105,14 @@ class Server:
                 #  --- Habitación en donde las plantas están en la etapa vegetativa de crecimiento ---
                 elif int(data_decode["room_type"]) == 1:
                     VPD_value = float(data_decode["VPD"])
+                #  --- Habitación en donde las plantas están en la etapa vegetativa de crecimiento ---
+                elif int(data_decode["room_type"]) == 1:
+                    VPD_value = float(data_decode["VPD"])
 
+                    if VPD_value > 1.2:
+                        actuators["cooling"] = 0.15
+                        extra_message += "VPD Alto"
+                        self.__anomaly_detected = True
                     if VPD_value > 1.2:
                         actuators["cooling"] = 0.15
                         extra_message += "VPD Alto"
@@ -113,13 +122,25 @@ class Server:
                         actuators["heating"] = 0.15
                         extra_message += "VPD Bajo"
                         self.__anomaly_detected = True
+                    elif VPD_value <= 1.0:
+                        actuators["heating"] = 0.15
+                        extra_message += "VPD Bajo"
+                        self.__anomaly_detected = True
 
+                #  --- Habitación en donde las plantas están en la etapa de floración ---
+                elif int(data_decode["room_type"]) == 2:
+                    VPD_value = float(data_decode["VPD"])
                 #  --- Habitación en donde las plantas están en la etapa de floración ---
                 elif int(data_decode["room_type"]) == 2:
                     VPD_value = float(data_decode["VPD"])
 
                     if VPD_value > 1.4:
                         actuators["cooling"] = 0.12
+                        extra_message += "VPD Alto"
+                        self.__anomaly_detected = True
+                    if VPD_value > 1.4:
+                        actuators["cooling"] = 0.12
+                        actuators["light"] = 0.05
                         extra_message += "VPD Alto"
                         self.__anomaly_detected = True
 
@@ -150,28 +171,35 @@ class Server:
                         pass
                     self.__anomaly_detected = False
                 else:
-                    # si no anomalía, almacenar en buffer y enviar cada cierto tiempo
+                    # si no anomalía, almacenar en buffer
                     self.__data_buffer.append(data)
-                    if len(self.__data_buffer) >= 10: # por ahora se envía cada 10 paquetes, revisar (tiempo final depende de rate de los sensores)
-                        data_batch = [json.loads(data.decode("utf-8")) for data in self.__data_buffer] 
-                        
-                        # se construye un solo paquete que lleva la data en lote
-                        package_batch = {"type": "batch", "data": data_batch}
-                        package_batch_encoded = json.dumps(package_batch).encode("utf-8")                   
-                        package_batch_encrypted = box.encrypt(package_batch_encoded)
-
-                        try:
-                            self.__server.sendto(package_batch_encrypted, (DASHBOARD_HOST, DASHBOARD_PORT))
-                        except Exception:
-                            pass
-
-                        self.__data_buffer.clear() # se limpia buffer
-
+            
             except socket.timeout:
                 pass # si se pasa 1 segundo sin recibir nada, se vuelve a iterar
                 
             except (CryptoError, json.JSONDecodeError):
                 pass
+
+            current_time = time.time()
+
+            if (current_time - self.last_batch_time) >= self.batch_interval or len(self.__data_buffer) >= 50:
+            
+                # Solo procesamos red si realmente hay algo que enviar
+                if len(self.__data_buffer) > 0:
+                    data_batch = [json.loads(d.decode("utf-8")) for d in self.__data_buffer] 
+                
+                    # se construye un solo paquete que lleva la data en lote
+                    package_batch = {"type": "batch", "data": data_batch}
+                    package_batch_encoded = json.dumps(package_batch).encode("utf-8")                   
+                    package_batch_encrypted = box.encrypt(package_batch_encoded)
+
+                    try:
+                        self.__server.sendto(package_batch_encrypted, (DASHBOARD_HOST, DASHBOARD_PORT))
+                    except Exception:
+                        pass
+
+                    self.__data_buffer.clear() # se limpia buffer
+
 
             current_time = time.time()
 
