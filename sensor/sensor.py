@@ -139,15 +139,15 @@ class Sensor:
             target_temp = 27.0
             target_humidity = 0.58
 
-        self.__data["room_temp"] += rd.uniform(-change_value, change_value)
-        self.__data["room_temp"] += -0.02 * (self.__data["room_temp"] - target_temp)
+        self.__data["room_temp"] += rd.uniform(-change_value-1, change_value)
+        self.__data["room_temp"] += -0.05 * (self.__data["room_temp"] - target_temp)
 
         self.__data["room_temp"] -= self.__system["cooling"]
         self.__data["room_temp"] += self.__system["heating"]
 
         # --- Humedad ---
         self.__data["humidity"] += rd.uniform(-change_value, change_value)
-        self.__data["humidity"] += -0.09 * (self.__data["humidity"] - target_humidity)
+        self.__data["humidity"] += -0.29 * (self.__data["humidity"] - target_humidity)
         self.__data["humidity"] += self.__system["humidifier"]
 
         self.__data["humidity"] = max(0.2, min(1.0, self.__data["humidity"]))
