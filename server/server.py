@@ -41,7 +41,7 @@ class Server:
 
          # -- tiempo fijo de envío de datos al dashboard (cuando no hay anomalías) --
         self.last_batch_time = time.time()
-        self.batch_interval = 5 # cada 5 segundos
+        self.batch_interval = 1 
 
     def init(self): 
         box = SecretBox(SHARED_KEY)
